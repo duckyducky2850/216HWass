@@ -8,6 +8,17 @@ const API_URL = 'https://wheatley.cs.up.ac.za/u25368037/api.php';
 export class ApiService {
 
   private apiKey: string = '';
+  private wsPort: number = 3000;
+
+  setWsPort(port: number) {
+    this.wsPort = port;
+    localStorage.setItem('wsPort', port.toString());
+  }
+
+  getWsPort(): number {
+    return this.wsPort || parseInt(localStorage.getItem('wsPort') || '3000');
+  }
+
 
   setApiKey(key: string) {
     this.apiKey = key;

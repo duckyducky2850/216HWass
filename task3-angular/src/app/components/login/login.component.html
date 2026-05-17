@@ -12,6 +12,12 @@
       <input type="password" [(ngModel)]="password" placeholder="Enter password"/>
     </div>
 
+    <div>
+      <label>Server Port</label>
+      <input type="number" [(ngModel)]="serverPort" placeholder="e.g. 3000"/>
+    </div>
+
+
     <button (click)="onLogin()" [disabled]="isLoading">
       {{ isLoading ? 'Logging in...' : 'Login' }}
     </button>

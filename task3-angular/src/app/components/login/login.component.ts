@@ -45,8 +45,8 @@ export class LoginComponent {
           if (connected) {
             this.wsService.send({
               type: 'LOGIN',
-              apikey: data.data.apikey,
-              userType: data.data.type
+              username: this.email,
+              password: this.password
             });
             statusSub.unsubscribe();
           }

@@ -1,9 +1,6 @@
 const api = require('./api');
 const fm = require('./flightManager');
 
-// clients: Map<ws, { username, role, flightIds: [] }>
-// allClients: Map<username, ws>
-
 function broadcastToFlight(flightId, message, activeFlights) {
   const flight = activeFlights[flightId];
   if (!flight) return;
@@ -24,19 +21,35 @@ async function handleMessage(ws, rawData, clients, allClients) {
 
   const clientInfo = clients.get(ws);
 
-  //  LOGIN 
+  // LOGIN
   if (msg.type === 'LOGIN') {
     try {
       const result = await api.login(msg.username, msg.password);
-      if (result.success) {
+      if (result.status === 'success') {
         clients.set(ws, {
-          username: result.username,
-          role: result.role,         // 'ATC' or 'Passenger'
-          flightIds: result.flight_ids || [],
+          username: result.data.name,
+          role: result.data.type,
+          flightIds: [],
+          apikey: result.data.apikey
         });
-        allClients.set(result.username, ws);
-        ws.send(JSON.stringify({ type: 'LOGIN_SUCCESS', role: result.role, username: result.username, flightIds: result.flight_ids }));
-        console.log(`[Auth] ${result.username} (${result.role}) connected.`);
+        allClients.set(result.data.name, ws);
+
+        // Fetch passenger flights if Passenger
+        if (result.data.type === 'Passenger') {
+          const flightsResult = await api.getAllFlights(result.data.apikey);
+          if (flightsResult.status === 'success') {
+            const flightIds = flightsResult.data.map(f => String(f.id));
+            clients.get(ws).flightIds = flightIds;
+          }
+        }
+
+        ws.send(JSON.stringify({ 
+          type: 'LOGIN_SUCCESS', 
+          role: result.data.type, 
+          username: result.data.name,
+          apikey: result.data.apikey
+        }));
+        console.log(`[Auth] ${result.data.name} (${result.data.type}) connected.`);
       } else {
         ws.send(JSON.stringify({ type: 'LOGIN_FAIL', message: 'Invalid credentials.' }));
       }
@@ -52,21 +65,29 @@ async function handleMessage(ws, rawData, clients, allClients) {
     return;
   }
 
-  //  DISPATCH (ATC only) 
+  // DISPATCH (ATC only)
   if (msg.type === 'DISPATCH') {
     if (clientInfo.role !== 'ATC') {
       ws.send(JSON.stringify({ type: 'ERROR', message: 'Only ATC can dispatch flights.' }));
       return;
     }
 
-    const flightId = msg.flightId;
+    const flightId = msg.flight_id;
     try {
-      await api.dispatchFlight(flightId);
-      const flight = await api.getFlight(flightId);
-      const airports = await api.getAirports();
+      await api.dispatchFlight(flightId, clientInfo.apikey);
+      const flightResult = await api.getFlight(flightId, clientInfo.apikey);
+      const airportsResult = await api.getAirports(clientInfo.apikey);
 
-      const origin = airports.find(a => a.code === flight.origin);
-      const dest = airports.find(a => a.code === flight.destination);
+      if (flightResult.status !== 'success') {
+        ws.send(JSON.stringify({ type: 'ERROR', message: 'Could not get flight details.' }));
+        return;
+      }
+
+      const flight = flightResult.data;
+      const airports = airportsResult.data;
+
+      const origin = airports.find(a => a.iata_code === flight.origin_code);
+      const dest = airports.find(a => a.iata_code === flight.destination_code);
 
       if (!origin || !dest) {
         ws.send(JSON.stringify({ type: 'ERROR', message: 'Airport coordinates not found.' }));
@@ -84,17 +105,17 @@ async function handleMessage(ws, rawData, clients, allClients) {
       // Subscribe ATC to POSITION updates automatically
       fm.subscribeToFlight(flightId, ws);
 
-      ws.send(JSON.stringify({ type: 'DISPATCH_SUCCESS', flightId }));
+      ws.send(JSON.stringify({ type: 'DISPATCH_SUCCESS', flight_id: flightId }));
       console.log(`[Dispatch] Flight ${flightId} dispatched by ATC ${clientInfo.username}.`);
 
       // Broadcast BOARDING_CALL to all Passengers booked on this flight
       const boardingCall = JSON.stringify({
         type: 'BOARDING_CALL',
-        flightId,
+        flight_id: flightId,
         message: `Flight ${flightId} is now boarding. You have 60 seconds to confirm.`,
       });
 
-      allClients.forEach((clientWs, username) => {
+      allClients.forEach((clientWs) => {
         const info = clients.get(clientWs);
         if (info && info.role === 'Passenger' && info.flightIds.includes(String(flightId))) {
           if (clientWs.readyState === 1) clientWs.send(boardingCall);
@@ -107,14 +128,14 @@ async function handleMessage(ws, rawData, clients, allClients) {
     return;
   }
 
-  //  BOARD (Passenger only)
+  // BOARD (Passenger only)
   if (msg.type === 'BOARD') {
     if (clientInfo.role !== 'Passenger') {
       ws.send(JSON.stringify({ type: 'ERROR', message: 'Only passengers can board.' }));
       return;
     }
 
-    const flightId = msg.flightId;
+    const flightId = msg.flight_id;
 
     if (!fm.isFlightActive(flightId)) {
       ws.send(JSON.stringify({ type: 'ERROR', message: 'Flight is not currently active.' }));
@@ -124,26 +145,24 @@ async function handleMessage(ws, rawData, clients, allClients) {
     if (!fm.isBoardingOpen(flightId)) {
       ws.send(JSON.stringify({ type: 'BOARD_ERROR', message: 'Boarding window has closed. You are marked as a no-show.' }));
 
-      // Notify ATC of no-show
-      allClients.forEach((clientWs, username) => {
+      allClients.forEach((clientWs) => {
         const info = clients.get(clientWs);
         if (info && info.role === 'ATC' && clientWs.readyState === 1) {
-          clientWs.send(JSON.stringify({ type: 'NO_SHOW', flightId, passenger: clientInfo.username }));
+          clientWs.send(JSON.stringify({ type: 'NO_SHOW', flight_id: flightId, passenger: clientInfo.username }));
         }
       });
       return;
     }
 
     try {
-      await api.boardFlight(flightId, clientInfo.username);
+      await api.boardFlight(flightId, clientInfo.apikey);
       fm.recordBoarding(flightId, clientInfo.username);
-      ws.send(JSON.stringify({ type: 'BOARD_SUCCESS', flightId }));
+      ws.send(JSON.stringify({ type: 'BOARD_SUCCESS', flight_id: flightId }));
 
-      // Notify ATC of successful boarding
-      allClients.forEach((clientWs, username) => {
+      allClients.forEach((clientWs) => {
         const info = clients.get(clientWs);
         if (info && info.role === 'ATC' && clientWs.readyState === 1) {
-          clientWs.send(JSON.stringify({ type: 'PASSENGER_BOARDED', flightId, passenger: clientInfo.username }));
+          clientWs.send(JSON.stringify({ type: 'PASSENGER_BOARDED', flight_id: flightId, passenger: clientInfo.username }));
         }
       });
     } catch (e) {
@@ -152,9 +171,9 @@ async function handleMessage(ws, rawData, clients, allClients) {
     return;
   }
 
-  //  TRACK 
+  // TRACK
   if (msg.type === 'TRACK') {
-    const flightId = msg.flightId;
+    const flightId = msg.flight_id;
 
     if (clientInfo.role === 'Passenger') {
       if (!clientInfo.flightIds.includes(String(flightId))) {
@@ -165,7 +184,7 @@ async function handleMessage(ws, rawData, clients, allClients) {
 
     const subscribed = fm.subscribeToFlight(flightId, ws);
     if (subscribed) {
-      ws.send(JSON.stringify({ type: 'TRACK_SUCCESS', flightId, message: 'Subscribed to live position updates.' }));
+      ws.send(JSON.stringify({ type: 'TRACK_SUCCESS', flight_id: flightId, message: 'Subscribed to live position updates.' }));
     } else {
       ws.send(JSON.stringify({ type: 'ERROR', message: `Flight ${flightId} is not currently active.` }));
     }
@@ -176,3 +195,4 @@ async function handleMessage(ws, rawData, clients, allClients) {
 }
 
 module.exports = { handleMessage };
+

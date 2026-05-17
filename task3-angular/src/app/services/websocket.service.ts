@@ -24,7 +24,8 @@ export class WebsocketService {
   }
 
   private _connect() {
-    const url = `ws://localhost:${this.port}`;
+  const url = `ws://localhost:${this.port}`;
+  console.log('Attempting WebSocket connection to:', url);
 
     try {
       this.socket = new WebSocket(url);

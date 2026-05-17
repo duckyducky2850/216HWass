@@ -57,11 +57,11 @@ export class PassengerViewComponent implements OnInit, OnDestroy {
 
   loadData() {
     this.isLoading = true;
+    console.log('API key:', this.apiService.getApiKey());
 
-    // Load flights and airports in parallel
     Promise.all([
-      this.apiService.getAllFlights(),
-      this.apiService.getAirports()
+      this.apiService.getAllFlights().then(d => { console.log('Flights:', d); return d; }),
+      this.apiService.getAirports().then(d => { console.log('Airports:', d); return d; })
     ])
     .then(([flightsData, airportsData]) => {
       this.isLoading = false;
@@ -82,7 +82,8 @@ export class PassengerViewComponent implements OnInit, OnDestroy {
     });
   }
 
-  handleMessage(message: any) {
+    handleMessage(message: any) {
+    console.log('Received message:', message);
     switch(message.type) {
       case 'BOARDING_CALL':
         if (this.flights.some(f => f.id === message.flight_id)) {

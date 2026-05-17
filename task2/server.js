@@ -31,12 +31,19 @@ function startServer(port) {
 
   app.post('/api', async (req, res) => {
     try {
+      console.log('[API] Calling:', `${baseWithAuth}/api.php`);
+      console.log('[API] Body:', req.body);
       const response = await axios.post(`${baseWithAuth}/api.php`, req.body);
       res.json(response.data);
     } catch (err) {
+      console.log('[API] Error:', err.message);
+      console.log('[API] Response:', err.response?.data);
       res.status(500).json({ status: 'error', data: err.message });
     }
   });
+
+
+
 
   // Create HTTP server that handles both Express and WebSocket
   const server = http.createServer(app);

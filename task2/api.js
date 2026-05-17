@@ -52,3 +52,4 @@ async function boardFlight(flightId, apikey) {
 }
 
 module.exports = { login, getAllFlights, getFlight, dispatchFlight, updateFlightPosition, getAirports, boardFlight };
+

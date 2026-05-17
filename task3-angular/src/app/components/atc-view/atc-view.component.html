@@ -68,7 +68,7 @@
         <div class="passenger-item" *ngFor="let p of selectedFlight.passengers">
           {{ p.name }} {{ p.surname }} — Seat {{ p.seat_number }}
           <span [class.confirmed]="p.boarding_confirmed">
-            {{ p.boarding_confirmed ? '✅ Boarded' : '⏳ Pending' }}
+            {{ p.boarding_confirmed ? 'Boarded' : 'Pending' }}
           </span>
         </div>
       </div>

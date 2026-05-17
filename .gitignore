@@ -1,5 +1,7 @@
 node_modules/
-task3/node_modules/
-task3/.angular/
+task3-angular/node_modules/
+task3-angular/.angular/
+task3-angular/src/environments/environment.ts
+task3-angular/src/environments/environment.prod.ts
 *.env
 config.php

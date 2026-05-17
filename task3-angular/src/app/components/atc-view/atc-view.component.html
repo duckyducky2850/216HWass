@@ -12,13 +12,19 @@
   <div class="error-banner" *ngIf="connectionError">
     {{ connectionError }}
   </div>
+  <div class="error-banner" *ngIf="wsError">
+  {{ wsError }}
+  </div>
+
 
   <div class="main-layout">
 
     <!-- Left panel - flight list -->
     <div class="flights-panel">
       <h3>All Flights</h3>
-
+      <p *ngIf="isLoading">Loading flights...</p>
+      <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+      
       <div class="flight-card" 
            *ngFor="let flight of flights"
            [class.selected]="selectedFlight?.id === flight.id"
@@ -83,7 +89,8 @@
 
   </div>
 
-  <app-map [airports]="[]" [flightPosition]=""null></app-map>
+  <app-map [airports]="airports" [flightPosition]="flightPosition"></app-map>
+
 
 </div>
 

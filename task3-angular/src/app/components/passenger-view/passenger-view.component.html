@@ -12,6 +12,10 @@
   <div class="error-banner" *ngIf="connectionError">
     {{ connectionError }}
   </div>
+  <div class="error-banner" *ngIf="wsError">
+  {{ wsError }}
+  </div>
+
 
   <!-- Boarding notification -->
   <div class="boarding-alert" *ngIf="showBoardingNotification">
@@ -28,6 +32,8 @@
   <!-- Flight list -->
   <div class="flights-section">
     <h3>Your Flights</h3>
+    <p *ngIf="isLoading">Loading flights...</p>
+    <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
 
     <div class="flight-card" *ngFor="let flight of flights">
       <div class="flight-info">
@@ -44,6 +50,7 @@
 
   </div>
 
-  <app-map [airports]="[]" [flightPosition]=""null></app-map>
+  <app-map [airports]="airports" [flightPosition]="flightPosition"></app-map>
+
 
 </div>

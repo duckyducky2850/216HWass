@@ -1,1 +1,52 @@
-<p>passenger-view works!</p>
+<div class="passenger-view">
+
+  <!-- Header -->
+  <div class="header">
+    <h2>Welcome, {{ userName }}</h2>
+    <span class="status-badge" [class.connected]="isConnected" [class.disconnected]="!isConnected">
+      {{ isConnected ? 'Connected' : 'Disconnected' }}
+    </span>
+  </div>
+
+  <!-- Connection error banner -->
+  <div class="error-banner" *ngIf="connectionError">
+    {{ connectionError }}
+  </div>
+
+  <!-- Boarding notification -->
+  <div class="boarding-alert" *ngIf="showBoardingNotification">
+    <h3>Boarding!</h3>
+    <p>Your flight is now boarding. Please confirm within:</p>
+    <div class="countdown" [class.urgent]="boardingCountdown <= 10">
+      {{ boardingCountdown }}s
+    </div>
+    <button class="board-btn" (click)="confirmBoarding()">
+      Confirm Boarding
+    </button>
+  </div>
+
+  <!-- Flight list -->
+  <div class="flights-section">
+    <h3>Your Flights</h3>
+
+    <div class="flight-card" *ngFor="let flight of flights">
+      <div class="flight-info">
+        <span class="flight-number">{{ flight.flight_number }}</span>
+        <span class="route">{{ flight.origin_code }} → {{ flight.destination_code }}</span>
+        <span class="status" [ngClass]="flight.status.toLowerCase().replace(' ', '-')">
+          {{ flight.status }}
+        </span>
+      </div>
+      <button class="track-btn" (click)="trackFlight(flight.id)">
+        Track Flight
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Map placeholder - will be replaced with real map component -->
+  <div class="map-placeholder">
+    <p>Map will appear here</p>
+  </div>
+
+</div>

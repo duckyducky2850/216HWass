@@ -1,0 +1,5 @@
+node_modules/
+task3/node_modules/
+task3/.angular/
+*.env
+config.php

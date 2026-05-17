@@ -1,0 +1,89 @@
+<div class="atc-view">
+
+  <!-- Header -->
+  <div class="header">
+    <h2>ATC Dashboard — {{ userName }}</h2>
+    <span class="status-badge" [class.connected]="isConnected" [class.disconnected]="!isConnected">
+      {{ isConnected ? 'Connected' : 'Disconnected' }}
+    </span>
+  </div>
+
+  <!-- Connection error banner -->
+  <div class="error-banner" *ngIf="connectionError">
+    {{ connectionError }}
+  </div>
+
+  <div class="main-layout">
+
+    <!-- Left panel - flight list -->
+    <div class="flights-panel">
+      <h3>All Flights</h3>
+
+      <div class="flight-card" 
+           *ngFor="let flight of flights"
+           [class.selected]="selectedFlight?.id === flight.id"
+           (click)="selectFlight(flight)">
+
+        <div class="flight-info">
+          <span class="flight-number">{{ flight.flight_number }}</span>
+          <span class="route">{{ flight.origin_code }} → {{ flight.destination_code }}</span>
+          <span class="status" [ngClass]="flight.status.toLowerCase().replace(' ', '-')">
+            {{ flight.status }}
+          </span>
+        </div>
+
+        <div class="flight-actions">
+          <button class="dispatch-btn"
+                  *ngIf="flight.status === 'Scheduled'"
+                  (click)="dispatchFlight(flight); $event.stopPropagation()">
+            Dispatch
+          </button>
+          <button class="track-btn"
+                  *ngIf="flight.status === 'In Flight'"
+                  (click)="trackFlight(flight.id); $event.stopPropagation()">
+            Track
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Right panel - selected flight details -->
+    <div class="details-panel">
+
+      <div *ngIf="selectedFlight; else noSelection">
+        <h3>Flight {{ selectedFlight.flight_number }}</h3>
+        <p>Route: {{ selectedFlight.origin_code }} → {{ selectedFlight.destination_code }}</p>
+        <p>Duration: {{ selectedFlight.flight_duration_hours }} hours</p>
+        <p>Status: {{ selectedFlight.status }}</p>
+
+        <h4>Passengers</h4>
+        <p *ngIf="selectedFlight.passengers.length === 0">No passenger data yet</p>
+        <div class="passenger-item" *ngFor="let p of selectedFlight.passengers">
+          {{ p.name }} {{ p.surname }} — Seat {{ p.seat_number }}
+          <span [class.confirmed]="p.boarding_confirmed">
+            {{ p.boarding_confirmed ? '✅ Boarded' : '⏳ Pending' }}
+          </span>
+        </div>
+      </div>
+
+      <ng-template #noSelection>
+        <p class="no-selection">Select a flight to view details</p>
+      </ng-template>
+
+      <!-- Notifications -->
+      <div class="notifications" *ngIf="notifications.length > 0">
+        <h4>Notifications</h4>
+        <div class="notification-item" *ngFor="let n of notifications">
+          {{ n }}
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <app-map [airports]="[]" [flightPosition]=""null></app-map>
+
+</div>
+

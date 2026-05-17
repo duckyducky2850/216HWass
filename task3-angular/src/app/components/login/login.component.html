@@ -1,0 +1,21 @@
+<div class="login-container">
+  <div class="login-box">
+    <h2>Flight Tracker</h2>
+
+    <div>
+      <label>Email</label>
+      <input type="email" [(ngModel)]="email" placeholder="Enter email"/>
+    </div>
+
+    <div>
+      <label>Password</label>
+      <input type="password" [(ngModel)]="password" placeholder="Enter password"/>
+    </div>
+
+    <button (click)="onLogin()" [disabled]="isLoading">
+      {{ isLoading ? 'Logging in...' : 'Login' }}
+    </button>
+
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  </div>
+</div>

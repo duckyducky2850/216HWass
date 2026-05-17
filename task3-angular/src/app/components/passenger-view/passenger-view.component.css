@@ -1,0 +1,136 @@
+.passenger-view {
+  padding: 24px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #6D6466;
+}
+
+.header h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #4E3D42;
+}
+
+.status-badge {
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.status-badge.connected { background: #C9D5B5; color: #4E3D42; }
+.status-badge.disconnected { background: #6D6466; color: #E3DBDB; }
+
+.error-banner {
+  background: #4E3D42;
+  color: #E3DBDB;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.boarding-alert {
+  background: #C9D5B5;
+  border: 2px solid #4E3D42;
+  border-radius: 10px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.boarding-alert h3 {
+  color: #4E3D42;
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.boarding-alert p {
+  color: #6D6466;
+  margin-bottom: 12px;
+}
+
+.countdown {
+  font-size: 52px;
+  font-weight: 700;
+  color: #4E3D42;
+}
+
+.countdown.urgent { color: #9F9F92; }
+
+.board-btn {
+  background: #4E3D42;
+  color: #E3DBDB;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+.flights-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #4E3D42;
+  margin-bottom: 14px;
+}
+
+.flight-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: white;
+  border: 1px solid #9F9F92;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  transition: box-shadow 0.2s;
+}
+
+.flight-card:hover {
+  box-shadow: 0 4px 12px rgba(78, 61, 66, 0.15);
+}
+
+.flight-number {
+  font-weight: 700;
+  font-size: 17px;
+  color: #4E3D42;
+  margin-right: 14px;
+}
+
+.route {
+  color: #6D6466;
+  margin-right: 14px;
+  font-size: 14px;
+}
+
+.status {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.scheduled { background: #E3DBDB; color: #4E3D42; }
+.boarding { background: #C9D5B5; color: #4E3D42; }
+.in-flight { background: #9F9F92; color: #E3DBDB; }
+.landed { background: #6D6466; color: #E3DBDB; }
+
+.track-btn {
+  background: #4E3D42;
+  color: #E3DBDB;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}

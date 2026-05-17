@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
   email: string = '';
@@ -12,40 +13,31 @@ export class LoginComponent {
   errorMessage: string = '';
   isLoading: boolean = false;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private apiService: ApiService) {}
 
   onLogin() {
     this.errorMessage = '';
     this.isLoading = true;
 
-    const body = {
-      type: 'Login',
-      email: this.email,
-      password: this.password
-    };
-
-    fetch('http://wheatley.cs.up.ac.za/u25368037/api.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    }).then(res=> res.json())
+    this.apiService.login(this.email, this.password)
     .then(data => {
       this.isLoading = false;
       if (data.status === 'success') {
-        localStorage.setItem('apikey', data.data.apikey);
+        this.apiService.setApiKey(data.data.apikey);
         localStorage.setItem('userType', data.data.type);
         localStorage.setItem('userName', data.data.name);
-        localStorage.setItem('userID', data.data.email);
+        localStorage.setItem('userId', data.data.id);
 
-        if (data.data.type === 'ATC'){
+        if (data.data.type === 'ATC') {
           this.router.navigate(['/atc']);
         } else {
           this.router.navigate(['/passenger']);
         }
       } else {
-        this.errorMessage = data.message || 'Login failed.';
+        this.errorMessage = data.data || 'Login failed';
       }
-    }).catch(() => {
+    })
+    .catch(() => {
       this.isLoading = false;
       this.errorMessage = 'Could not connect to server';
     });

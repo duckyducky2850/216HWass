@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 
-const API_URL = 'https://wheatley.cs.up.ac.za/u25368037/api.php';
+const API_URL = environment.apiUrl;
+
 
 @Injectable({
   providedIn: 'root'
@@ -30,12 +32,30 @@ export class ApiService {
   }
 
   private post(body: object): Promise<any> {
+    const credentials = btoa(environment.wheatleyUser + ':' + environment.wheatleyPass);
+    
     return fetch(API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + credentials
+      },
       body: JSON.stringify(body)
-    }).then(res => res.json());
+    })
+    .then(res => res.text())
+    .then(text => {
+      console.log('Raw response:', text);
+      return JSON.parse(text);
+    })
+    .catch(err => {
+      console.error('Fetch error:', err);
+      throw err;
+    });
   }
+
+
+
+
 
   login(email: string, password: string): Promise<any> {
     return this.post({ type: 'Login', email, password });

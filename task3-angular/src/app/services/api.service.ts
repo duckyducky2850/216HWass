@@ -32,13 +32,10 @@ export class ApiService {
   }
 
   private post(body: object): Promise<any> {
-    const credentials = btoa(environment.wheatleyUser + ':' + environment.wheatleyPass);
-    
-    return fetch(API_URL, {
+    return fetch(environment.apiUrl, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + credentials
+      headers: {
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
     })
@@ -52,7 +49,6 @@ export class ApiService {
       throw err;
     });
   }
-
 
 
 

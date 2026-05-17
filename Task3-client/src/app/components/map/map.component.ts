@@ -79,20 +79,78 @@ export class MapComponent implements OnInit, OnDestroy, OnChanges {
   updateAircraftPosition(position: any) {
     if (!this.map || !position) return;
 
+    const bearing = position.bearing || 0;
+
+    const aircraftIcon = L.divIcon({
+      html: `<img src="assets/plane.png" style="width:40px;height:40px;transform:rotate(${bearing -50}deg);">`,
+      className: '',
+      iconSize: [40, 40],
+      iconAnchor: [20, 20]
+    });
+
     if (!this.aircraftMarker) {
       this.aircraftMarker = L.marker(
         [position.latitude, position.longitude],
-        { icon: this.aircraftIcon }
+        { icon: aircraftIcon }
       ).addTo(this.map);
     } else {
       this.aircraftMarker.setLatLng([position.latitude, position.longitude]);
+      this.aircraftMarker.setIcon(aircraftIcon);
     }
   }
+
 
   ngOnDestroy() {
     if (this.map) {
       this.map.remove();
     }
   }
+
+  animateFlight(originLat: number, originLon: number, destLat: number, destLon: number, durationSeconds: number) {
+    const startTime = Date.now();
+    const bearing = this.calculateBearing(originLat, originLon, destLat, destLon);
+
+    const animate = () => {
+      const elapsed = (Date.now() - startTime) / 1000;
+      const progress = Math.min(elapsed / durationSeconds, 1);
+
+      const currentLat = originLat + (destLat - originLat) * progress;
+      const currentLon = originLon + (destLon - originLon) * progress;
+
+      this.updateAircraftPosition({
+        latitude: currentLat,
+        longitude: currentLon,
+        bearing: bearing
+      });
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        console.log('Flight reached destination');
+      }
+    };
+
+    requestAnimationFrame(animate);
+
+  }
+
+  private calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const toRad = (deg: number) => deg * Math.PI / 180;
+    const toDeg = (rad: number) => rad * 180 / Math.PI;
+
+    const dLon = toRad(lon2 - lon1);
+    const y = Math.sin(dLon) * Math.cos(toRad(lat2));
+    const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+              Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
+
+    return (toDeg(Math.atan2(y, x)) + 360) % 360;
+  }
+
+  testAnimation() {
+    // JNB to CPT
+    this.animateFlight(-26.1392, 28.2460, -33.9648, 18.6017, 10);
+  }
+
+
 }
 
